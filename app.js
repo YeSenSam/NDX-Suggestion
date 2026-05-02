@@ -172,6 +172,28 @@ function renderSentimentScore(module) {
   document.getElementById("sentiment-note").textContent = module.note;
 }
 
+function renderDcaEngine(engine) {
+  document.getElementById("dca-action").textContent = engine.action;
+  document.getElementById("dca-multiplier").textContent = `${engine.multiplier.toFixed(2)}x`;
+  document.getElementById("dca-summary").textContent = engine.summary;
+  document.getElementById("dca-asof").textContent = `生成时间：${engine.asOf}`;
+  document.getElementById("dca-inputs").innerHTML = engine.inputs
+    .map((item) => `
+      <div class="mini-stat compact">
+        <strong>${escapeHtml(item.value)}</strong>
+        <span>${escapeHtml(item.label)}</span>
+      </div>
+    `)
+    .join("");
+  document.getElementById("dca-rules").innerHTML = engine.rules
+    .map((rule) => `<li>${escapeHtml(rule)}</li>`)
+    .join("");
+  document.getElementById("dca-execution").innerHTML = engine.execution
+    .map((step) => `<li>${escapeHtml(step)}</li>`)
+    .join("");
+  document.getElementById("dca-warning").textContent = engine.warning;
+}
+
 function renderRules(rules) {
   document.getElementById("rules-list").innerHTML = rules
     .map((rule) => `<li><strong>${escapeHtml(rule.title)}</strong><br>${escapeHtml(rule.body)}</li>`)
@@ -190,6 +212,7 @@ function renderDashboard(data) {
   renderHighlights("spx", data.indices.spx);
   renderStrategy(data.strategy);
   renderSentimentScore(data.sentimentScore);
+  renderDcaEngine(data.dcaEngine);
   renderOfficialIndexMetrics(data.officialIndexMetrics);
   renderMacroMetrics(data.macroMetrics);
   renderRules(data.rules);

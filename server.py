@@ -565,6 +565,107 @@ def build_sentiment_score_module(fear_greed: dict, naaim: dict, aaii: dict) -> d
     }
 
 
+def build_dca_engine(strategy: dict, sentiment_score: dict, spx: dict, vix: dict, macro: dict) -> dict:
+    spx_drawdown = spx.get("drawdown")
+    spx_200dma = spx.get("distance_200dma")
+    vix_level = vix.get("price")
+    sahm = float(macro["sahm"])
+    dgs10 = float(macro["dgs10"])
+    sentiment = sentiment_score["score"]
+
+    multiplier = 1.0
+    rules = []
+
+    if spx_drawdown is not None:
+        if spx_drawdown <= -15:
+            multiplier += 0.75
+            rules.append("回撤超过15%，进入高强度分批加仓区。")
+        elif spx_drawdown <= -10:
+            multiplier += 0.50
+            rules.append("回撤超过10%，提高定投强度。")
+        elif spx_drawdown <= -5:
+            multiplier += 0.20
+            rules.append("回撤超过5%，小幅增强定投。")
+        else:
+            rules.append("回撤不足5%，价格位置没有触发增强定投。")
+
+    if spx_200dma is not None:
+        if spx_200dma < -3:
+            multiplier += 0.25
+            rules.append("指数低于200日均线，趋势过滤允许增加买入。")
+        elif spx_200dma > 8:
+            multiplier -= 0.20
+            rules.append("指数明显高于200日均线，降低追加强度。")
+
+    if vix_level is not None:
+        if vix_level >= 30:
+            multiplier += 0.35
+            rules.append("VIX高于30，恐慌环境支持逆向分批加仓。")
+        elif vix_level >= 22:
+            multiplier += 0.15
+            rules.append("VIX高于22，情绪压力上升，小幅增加定投。")
+
+    if sentiment < 40:
+        multiplier -= 0.25
+        rules.append("情绪综合分偏低，恐贪和仓位偏热，压低额外加仓。")
+    elif sentiment >= 60:
+        multiplier += 0.20
+        rules.append("情绪综合分支持逆向加仓。")
+
+    if sahm >= 0.5:
+        multiplier = min(multiplier, 1.0)
+        rules.append("Sahm Rule触发衰退警戒，额外加仓被强制降档。")
+    elif sahm >= 0.3:
+        multiplier -= 0.15
+        rules.append("Sahm Rule接近警戒，降低增强幅度。")
+
+    if dgs10 >= 4.5:
+        multiplier -= 0.15
+        rules.append("10年期美债偏高，对估值有压制，降低增强幅度。")
+
+    multiplier = round(max(0.8, min(2.0, multiplier)), 2)
+
+    if multiplier >= 1.8:
+        action = "2.0x 强力分批加仓"
+        stance = "强进攻"
+    elif multiplier >= 1.45:
+        action = "1.5x 加强定投"
+        stance = "进攻"
+    elif multiplier >= 1.15:
+        action = "1.2x 小幅加强"
+        stance = "轻进攻"
+    elif multiplier >= 0.95:
+        action = "1.0x 正常定投"
+        stance = "中性"
+    else:
+        action = "0.8x 减少追加"
+        stance = "防守"
+
+    return {
+        "title": "增强定投策略引擎",
+        "action": action,
+        "stance": stance,
+        "multiplier": multiplier,
+        "asOf": local_time(),
+        "summary": "综合回撤、200DMA、VIX、情绪评分、Sahm Rule和10年期美债后生成今日定投强度。",
+        "rules": rules,
+        "inputs": [
+            {"label": "基础策略分", "value": f"{strategy['score']} / 100"},
+            {"label": "情绪评分", "value": f"{sentiment_score['score']} / 100"},
+            {"label": "SPX 52周回撤", "value": pct_text(spx_drawdown)},
+            {"label": "SPX 距200DMA", "value": pct_text(spx_200dma)},
+            {"label": "VIX", "value": num_text(vix_level)},
+            {"label": "Sahm Rule", "value": f"{sahm:.2f}"},
+        ],
+        "execution": [
+            "基础定投不断供，这是策略底座。",
+            f"本期按基础金额的 {multiplier:.2f} 倍执行。",
+            "如果后续触发更深回撤，再按下一档分批加仓，不提前打满。",
+        ],
+        "warning": "这是仓位强度建议，不是短线买卖信号。",
+    }
+
+
 def make_spx_card(spx: dict) -> dict:
     now = local_time()
     status = spx.get("status", "民间源")
@@ -872,6 +973,7 @@ def build_dashboard_payload() -> dict:
     }
     strategy = score_strategy(ndx, spx, vix, macro_values)
     sentiment_score = build_sentiment_score_module(fear_greed, naaim, aaii)
+    dca_engine = build_dca_engine(strategy, sentiment_score, spx, vix, macro_values)
 
     return {
         "meta": {
@@ -887,6 +989,7 @@ def build_dashboard_payload() -> dict:
         },
         "strategy": strategy,
         "sentimentScore": sentiment_score,
+        "dcaEngine": dca_engine,
         "officialIndexMetrics": [
             make_mixed_index_metric("指数点位", ndx["last"], num_text(spx["price"]), "混合源", "NDX 为 Nasdaq 官方指数点位；SPX 为 Yahoo Finance 民间源。"),
             make_mixed_index_metric("涨跌点数", ndx["net_change"], num_text(spx["change"]), "混合源", "NDX 为 Nasdaq 官方；SPX 为民间源。"),
