@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>美股指数定投数据看板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Official Index Data</p>
+        <h1>Nasdaq-100 / S&amp;P 500<br>定投决策数据看板</h1>
+        <p class="hero-copy">
+          纳指100使用 Nasdaq 官方指数页面；标普500、VIX 和技术指标按要求使用民间源，并在表格中明确标注。策略模块根据今日面板数据自动生成。
+        </p>
+      </div>
+      <div class="status-panel">
+        <p class="panel-label">数据状态</p>
+        <h2 id="board-status">载入中</h2>
+        <p id="board-summary">正在读取官方数据源</p>
+        <div class="signal-chips" id="status-chips"></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section-grid">
+        <article class="card spotlight">
+          <div class="card-head">
+            <div>
+              <p class="panel-label">NDX</p>
+              <h3>Nasdaq-100 Index</h3>
+            </div>
+            <span class="ticker">NDX</span>
+          </div>
+          <p class="asset-copy" id="ndx-summary"></p>
+          <div class="mini-grid" id="ndx-highlights"></div>
+        </article>
+
+        <article class="card spotlight">
+          <div class="card-head">
+            <div>
+              <p class="panel-label">SPX</p>
+              <h3>S&amp;P 500 Index</h3>
+            </div>
+            <span class="ticker">SPX</span>
+          </div>
+          <p class="asset-copy" id="spx-summary"></p>
+          <div class="mini-grid" id="spx-highlights"></div>
+        </article>
+      </section>
+
+      <section class="section-stack">
+        <div class="section-title">
+          <p class="eyebrow">Today Strategy</p>
+          <h2>今日策略建议</h2>
+        </div>
+        <article class="card strategy-card">
+          <div class="strategy-main">
+            <div>
+              <p class="panel-label">Action</p>
+              <h3 id="strategy-action">载入中</h3>
+              <p class="asset-copy" id="strategy-allocation"></p>
+              <small id="strategy-asof"></small>
+            </div>
+            <div class="strategy-score">
+              <span id="strategy-score">-- / 100</span>
+              <small>综合分</small>
+            </div>
+          </div>
+          <div class="strategy-snapshot" id="strategy-snapshot"></div>
+          <div class="strategy-detail-grid">
+            <section>
+              <p class="panel-label">Factor Scores</p>
+              <div class="factor-list" id="strategy-factors"></div>
+            </section>
+            <section>
+              <p class="panel-label">Analysis</p>
+              <ul class="rules" id="strategy-analysis"></ul>
+            </section>
+            <section>
+              <p class="panel-label">Triggers</p>
+              <ul class="rules" id="strategy-reasons"></ul>
+            </section>
+            <section>
+              <p class="panel-label">Execution</p>
+              <ul class="rules" id="strategy-plan"></ul>
+            </section>
+          </div>
+          <div>
+            <p class="panel-label">Risk Notes</p>
+            <ul class="rules" id="strategy-risks"></ul>
+          </div>
+          <p class="strategy-disclaimer" id="strategy-disclaimer"></p>
+        </article>
+      </section>
+
+      <section class="section-stack">
+        <div class="section-title">
+          <p class="eyebrow">Official Index Metrics</p>
+          <h2>官方指数指标</h2>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>指标</th>
+                <th>NDX</th>
+                <th>SPX</th>
+                <th>官方来源</th>
+                <th>读取时间</th>
+                <th>状态</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody id="index-metrics-table"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section-stack">
+        <div class="section-title">
+          <p class="eyebrow">Official Macro Layer</p>
+          <h2>官方宏观数据</h2>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>指标</th>
+                <th>当前值</th>
+                <th>截至日期</th>
+                <th>来源</th>
+                <th>状态</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody id="macro-metrics-table"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section-grid">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="panel-label">Rules</p>
+              <h3>数据规则</h3>
+            </div>
+          </div>
+          <ul class="rules" id="rules-list"></ul>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="panel-label">Sources</p>
+              <h3>来源说明</h3>
+            </div>
+          </div>
+          <ul class="sources" id="sources-list"></ul>
+        </article>
+      </section>
+
+      <section class="section-stack">
+        <div class="section-title">
+          <p class="eyebrow">Sentiment Composite</p>
+          <h2>情绪加权评分</h2>
+        </div>
+        <article class="card strategy-card">
+          <div class="strategy-main">
+            <div>
+              <p class="panel-label">Action</p>
+              <h3 id="sentiment-action">载入中</h3>
+              <p class="asset-copy" id="sentiment-allocation"></p>
+              <small id="sentiment-asof"></small>
+            </div>
+            <div class="strategy-score">
+              <span id="sentiment-score">-- / 100</span>
+              <small>情绪分</small>
+            </div>
+          </div>
+          <div class="strategy-detail-grid">
+            <section>
+              <p class="panel-label">Weighted Inputs</p>
+              <div class="factor-list" id="sentiment-weights"></div>
+            </section>
+            <section>
+              <p class="panel-label">Analysis</p>
+              <ul class="rules" id="sentiment-analysis"></ul>
+            </section>
+          </div>
+          <div>
+            <p class="panel-label">NAAIM Recent Weeks</p>
+            <div class="strategy-snapshot" id="sentiment-naaim"></div>
+          </div>
+          <div class="strategy-detail-grid">
+            <section>
+              <p class="panel-label">Sources</p>
+              <ul class="sources" id="sentiment-sources"></ul>
+            </section>
+            <section>
+              <p class="panel-label">Note</p>
+              <p class="strategy-disclaimer" id="sentiment-note"></p>
+            </section>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
